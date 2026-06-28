@@ -19,6 +19,7 @@ jobs:
         with:
           go-version-file: go.mod
           check-latest: true
+          cache: false # no external deps / go.sum, so module caching is unnecessary
 
       - name: Vet
         run: make vet
