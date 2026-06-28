@@ -1,0 +1,47 @@
+name: release
+
+# Build binaries and attach them to a GitHub Release whenever a version tag is pushed.
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions: {}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # required to create the release and upload assets
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false # test/build don't use git auth
+
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: go.mod
+          check-latest: true
+          cache: false # no external deps / go.sum, so module caching is unnecessary
+
+      - name: Test
+        run: make test
+
+      - name: Build release binaries
+        run: make build-all
+
+      - name: Create or update release and upload assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Idempotent: create the release only if it doesn't exist yet, then
+          # (re)upload assets so a partial failure can be safely re-run.
+          if ! gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release create "$GITHUB_REF_NAME" \
+              --title "$GITHUB_REF_NAME" \
+              --generate-notes
+          fi
+          gh release upload "$GITHUB_REF_NAME" \
+            build/getfgpat-linux-amd64 \
+            build/getfgpat-darwin-arm64 \
+            --clobber
