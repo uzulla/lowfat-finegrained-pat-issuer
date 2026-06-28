@@ -124,3 +124,15 @@ make vet      # go vet
 make fmt      # go fmt
 make clean    # remove build artifacts
 ```
+
+## Release
+
+Pushing a version tag (`v*`) triggers the
+[`release`](.github/workflows/release.yml) GitHub Actions workflow, which builds
+the Linux x64 and macOS arm64 binaries and attaches them to a GitHub Release.
+
+```sh
+git tag v0.1.0
+git push origin v0.1.0
+# → release created with build/getfgpat-linux-amd64 and build/getfgpat-darwin-arm64 attached
+```
